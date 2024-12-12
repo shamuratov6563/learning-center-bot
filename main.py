@@ -35,9 +35,8 @@ async def start(message: Message, state: FSMContext):
 
 @dp.message(lambda message: message.text == "O'quv kurslar")
 async def courses_handler(message: Message):
-    db_courses = fetch_all_courses()  # Ma'lumotlar bazasidan kurslarni olamiz
+    db_courses = fetch_all_courses()  
     if db_courses:
-        # InlineKeyboardMarkup obyektini to'ldirilgan 'inline_keyboard' bilan yaratamiz
         inline_kb = InlineKeyboardMarkup(
             inline_keyboard=[
                 [InlineKeyboardButton(text=course[0], callback_data=f"course_{i}")]
@@ -52,7 +51,7 @@ async def courses_handler(message: Message):
 @dp.callback_query(lambda query: query.data.startswith("course_"))
 async def course_details_handler(query: CallbackQuery):
     db_courses = fetch_all_courses()  # Kurslarni qayta yuklaymiz
-    course_index = int(query.data.split("_")[1])  # Callback dan indeksni ajratib olamiz
+    course_index = int(query.data.split("_")[1])  
     if course_index < len(db_courses):
         course = db_courses[course_index]
         course_details = (
@@ -71,10 +70,13 @@ async def benefits_handler(message: Message):
     await message.reply("Bizning afzalliklarimiz:\n- Malakali o'qituvchilar\n- Amaliy darslar\n- Zamonaviy materiallar")
 
 
-@dp.message(lambda message: message.text == "Kurs qo'shish" and message.from_user.id == ADMIN_ID)
+@dp.message(lambda message: message.text == "Kurs qo'shish" )
 async def add_course_handler(message: Message, state: FSMContext):
-    await message.reply("Kurs nomini kiriting:")
-    await state.set_state(CourseStates.name)
+    if message.from_user.id == ADMIN_ID:
+        await message.reply("Kurs nomini kiriting:")
+        await state.set_state(CourseStates.name)
+    else:
+        await message.reply("Uzur!\nSiz bu bo'limdan foydalana o'lamaysiz")
 
 
 @dp.message(CourseStates.name)
@@ -104,7 +106,8 @@ async def add_course_teacher_info(message: Message, state: FSMContext):
     data = await state.get_data()
     insert_row_employee(data['name'], data['price'], data['description'], data['teacher_info'])
 
-    await message.reply("Kurs muvaffaqiyatli qo'shildi!")
+
+    await message.reply(f"Kurs muvaffaqiyatli qo'shildi!\nName: {data["name"]}\nPrice: {data["price"]}\nDescraption: {data['description']}\nTeacher_info: {data['teacher_info']}")
     await state.clear()
 
 
